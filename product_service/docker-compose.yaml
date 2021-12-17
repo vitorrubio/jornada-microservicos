@@ -1,0 +1,45 @@
+version: '3'
+services: 
+  productapp:
+    build: . # instrui o docker a construir o container a partir do diretorio atual usando o dockerfile no diretorio atual
+    volumes: # permite ao docker acessar os arquivos do diretorio compartilhado
+      - ./:/var/www
+    depends_on:
+      - productapp-mysql
+      - productapp-redis
+
+  productapp-mysql:
+    image: mysql:5.7.22
+    command: --innodb-use-native-aio=0
+    restart: always
+    volumes:
+      - ./.docker/dbdata:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: productapp
+      #MYSQL_USER: productapp
+      #MYSQL_PASSWORD: productapp
+    ports:
+      - "3306:3306"
+
+
+
+  productapp-nginx:
+    build: ./.docker/nginx
+    #restart: always
+    ports:
+      - "8001:80"
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - productapp
+      
+
+    
+
+  productapp-redis:
+    image: redis:alpine
+    environment:
+      REDIS_PASSWORD: redis
+    expose:
+      - 6379
